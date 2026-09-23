@@ -986,18 +986,20 @@ function renderOrders() {
 
   state.orders.forEach(ord => {
     const card = document.createElement('div');
-    // أزيلت أي فئات أو أنيميشن قد تسبب النبض، الكارت الآن ثابت وهادئ
-    card.className = 'order-card';
-    card.style.cssText = 'animation: none !important; transition: none !important; transform: none !important;';
+    // الكلاس الأصلي order-card بدون أي انيميشن أو نبض للكارت نفسه
+    card.className = `order-card ${ord.patience < 35 ? 'urgent' : ''}`;
+    card.style.cssText = 'animation: none !important; transition: none !important;';
     card.innerHTML = `
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:20px;">${ord.icon}</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--bg-primary); border-radius:50%; flex-shrink:0;">
+          ${ord.customerAvatar}
+        </div>
         <div>
-          <div style="font-size:11px; font-weight:800;">${ord.recipeName}</div>
-          <div style="font-size:9.5px; color:var(--text-muted);">${ord.customerName}</div>
+          <div style="font-size:11.5px; font-weight:900; color:var(--text-main);">${ord.recipeName} <span style="font-size:14px;">${ord.icon}</span></div>
+          <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${ord.customerName}</div>
         </div>
       </div>
-      <div class="patience-bar-bg">
+      <div class="patience-bar-bg" style="margin-top:6px;">
         <div id="pat_fill_${ord.id}" class="patience-bar-fill" style="width:${ord.patience}%; background:${ord.patience < 35 ? '#ff4757' : 'var(--pink-main)'};"></div>
       </div>
     `;

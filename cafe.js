@@ -213,7 +213,7 @@ const CUSTOMERS = [
   { name: 'هابر', avatar: ANIMAL_AVATARS.bunny },
   { name: 'قريزلي', avatar: ANIMAL_AVATARS.bear },
   { name: 'بوبي', avatar: ANIMAL_AVATARS.shiba },
-  { name: 'ولفي', avatar: ANIMAL_AVATARS.fox }
+  { name: 'فوكسي', avatar: ANIMAL_AVATARS.fox }
 ];
 
 // الأجهزة المتاحة للشراء بالمتجر

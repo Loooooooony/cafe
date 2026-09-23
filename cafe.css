@@ -1,8 +1,3 @@
-/* ==========================================
-   كافيه البنات المشترك | Pookie Cozy Cafe Rush
-   Original Animated CSS Style
-   ========================================== */
-
 :root {
   --pink-main: #ff7597;
   --pink-subtle: #ffd6e0;
@@ -49,26 +44,6 @@ body {
   border: 2px solid var(--pink-subtle);
 }
 
-/* ==========================================
-   إعادة تأثيرات الأنميشن والحرَكات الكيوت 🌸
-   ========================================== */
-@keyframes avatarBounce {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-6px) scale(1.05);
-  }
-}
-
-.bounce-anim,
-.animated-avatar-svg,
-.avatar-choice.selected,
-.order-avatar {
-  animation: avatarBounce 2.2s ease-in-out infinite !important;
-}
-
-/* الشاشات والحاويات */
 .screen {
   display: none;
   padding: 20px;
@@ -99,14 +74,8 @@ body {
   justify-content: center;
   cursor: pointer;
   font-size: 16px;
-  transition: transform 0.2s ease;
 }
 
-.icon-btn:hover {
-  transform: scale(1.1);
-}
-
-/* اختيار الشخصيات والحيوانات */
 .avatar-choices {
   display: flex;
   justify-content: center;
@@ -125,7 +94,6 @@ body {
   justify-content: center;
   cursor: pointer;
   padding: 4px;
-  transition: all 0.2s ease;
 }
 
 .avatar-choice.selected {
@@ -134,7 +102,6 @@ body {
   box-shadow: 0 0 0 3px rgba(255, 117, 151, 0.2);
 }
 
-/* الأزرار والحقول */
 .input-field {
   width: 100%;
   padding: 12px 16px;
@@ -144,7 +111,6 @@ body {
   text-align: center;
   outline: none;
   background: #fff;
-  transition: border-color 0.2s ease;
 }
 
 .input-field:focus {
@@ -164,7 +130,6 @@ body {
   justify-content: center;
   gap: 8px;
   box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
 }
 
 .btn-primary {
@@ -172,26 +137,11 @@ body {
   color: #fff;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 117, 151, 0.3);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-  background: #e65c7e;
-}
-
 .btn-solo {
   background: #f1f2f6;
   color: var(--text-dark);
 }
 
-.btn-solo:hover {
-  background: #e4e7eb;
-}
-
-/* شاشة الانتظار */
 #roomWaitingBox {
   background: var(--bg-primary);
   border: 2px dashed var(--pink-main);
@@ -222,7 +172,6 @@ body {
   background: var(--bg-primary);
 }
 
-/* تذاكر الطلبات */
 .orders-rack {
   display: flex;
   gap: 10px;
@@ -240,13 +189,11 @@ body {
   flex-direction: column;
   gap: 6px;
   position: relative;
-  transition: transform 0.2s ease;
 }
 
 .order-card.urgent {
   border-color: #ff4757;
   background: #fff5f5;
-  animation: avatarBounce 1s ease-in-out infinite !important;
 }
 
 .patience-bar-bg {
@@ -273,7 +220,6 @@ body {
   font-weight: 700;
 }
 
-/* المكونات والمتجر */
 .ingredients-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -295,16 +241,9 @@ body {
   gap: 4px;
   cursor: pointer;
   text-align: center;
-  transition: all 0.15s ease;
-}
-
-.ingredient-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--pink-main);
 }
 
 .ingredient-card:active {
-  transform: scale(0.95);
   background: var(--bg-primary);
 }
 
@@ -312,11 +251,6 @@ body {
   opacity: 0.55;
   background: #f8f9fa;
   cursor: not-allowed;
-}
-
-.ingredient-card.locked:hover {
-  transform: none;
-  border-color: var(--pink-subtle);
 }
 
 .ing-icon {
@@ -336,7 +270,6 @@ body {
   border-radius: 4px;
 }
 
-/* الإشعارات السريعة (Toast) */
 .toast-shout {
   position: absolute;
   top: 15px;

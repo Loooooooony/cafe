@@ -1,11 +1,7 @@
 /**
  * كافيه البنات المشترك | Pookie Cozy Cafe Rush
- * Game Engine, Upgrades Shop, Animated SVG Avatars & Clean Copy Link
  */
 
-// ==========================================
-// 1. نظام المؤثرات الصوتية (Web Audio API)
-// ==========================================
 class CuteAudio {
   constructor() {
     this.ctx = null;
@@ -197,15 +193,12 @@ class CuteAudio {
 
 const audio = new CuteAudio();
 
-// ==========================================
-// 2. أيقونات الحركات والحيوانات المتحركة (SVG)
-// ==========================================
 const ANIMAL_AVATARS = {
-  cat: `<svg class="animated-avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g class="bounce-anim"><circle cx="32" cy="36" r="22" fill="#ffeaa7"/><path d="M14 20 L24 8 L28 26 Z" fill="#fdcb6e"/><path d="M50 20 L40 8 L36 26 Z" fill="#fdcb6e"/><circle cx="24" cy="34" r="3" fill="#2d3436"/><circle cx="40" cy="34" r="3" fill="#2d3436"/><ellipse cx="32" cy="40" rx="4" ry="2.5" fill="#ff7597"/><ellipse cx="18" cy="38" rx="3.5" ry="2" fill="#ff7597" opacity="0.5"/><ellipse cx="46" cy="38" rx="3.5" ry="2" fill="#ff7597" opacity="0.5"/></g></svg>`,
-  bunny: `<svg class="animated-avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g class="bounce-anim"><ellipse cx="22" cy="16" rx="6" ry="16" fill="#ffd6e0"/><ellipse cx="42" cy="16" rx="6" ry="16" fill="#ffd6e0"/><circle cx="32" cy="38" r="20" fill="#fff"/><circle cx="24" cy="36" r="3" fill="#2d3436"/><circle cx="40" cy="36" r="3" fill="#2d3436"/><polygon points="32,41 29,44 35,44" fill="#ff7597"/><ellipse cx="18" cy="40" rx="3" ry="2" fill="#ff7597" opacity="0.6"/><ellipse cx="46" cy="40" rx="3" ry="2" fill="#ff7597" opacity="0.6"/></g></svg>`,
-  bear: `<svg class="animated-avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g class="bounce-anim"><circle cx="16" cy="18" r="8" fill="#e1b12c"/><circle cx="48" cy="18" r="8" fill="#e1b12c"/><circle cx="32" cy="36" r="22" fill="#fbc531"/><ellipse cx="32" cy="40" rx="9" ry="7" fill="#fff"/><circle cx="24" cy="32" r="3" fill="#2d3436"/><circle cx="40" cy="32" r="3" fill="#2d3436"/><ellipse cx="32" cy="38" rx="3" ry="2" fill="#2d3436"/></g></svg>`,
-  shiba: `<svg class="animated-avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g class="bounce-anim"><path d="M12 18 L24 10 L26 28 Z" fill="#e67e22"/><path d="M52 18 L40 10 L38 28 Z" fill="#e67e22"/><circle cx="32" cy="36" r="21" fill="#f39c12"/><path d="M20 44 C20 30, 44 30, 44 44 C44 54, 20 54, 20 44 Z" fill="#fff"/><circle cx="24" cy="32" r="3" fill="#2d3436"/><circle cx="40" cy="32" r="3" fill="#2d3436"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#2d3436"/></g></svg>`,
-  fox: `<svg class="animated-avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g class="bounce-anim"><path d="M10 14 L24 10 L28 30 Z" fill="#e74c3c"/><path d="M54 14 L40 10 L36 30 Z" fill="#e74c3c"/><circle cx="32" cy="36" r="21" fill="#e67e22"/><polygon points="32,56 18,36 46,36" fill="#fff"/><circle cx="23" cy="32" r="3" fill="#2d3436"/><circle cx="41" cy="32" r="3" fill="#2d3436"/><circle cx="32" cy="48" r="3" fill="#2d3436"/></g></svg>`
+  cat: `<svg class="avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g><circle cx="32" cy="36" r="22" fill="#ffeaa7"/><path d="M14 20 L24 8 L28 26 Z" fill="#fdcb6e"/><path d="M50 20 L40 8 L36 26 Z" fill="#fdcb6e"/><circle cx="24" cy="34" r="3" fill="#2d3436"/><circle cx="40" cy="34" r="3" fill="#2d3436"/><ellipse cx="32" cy="40" rx="4" ry="2.5" fill="#ff7597"/><ellipse cx="18" cy="38" rx="3.5" ry="2" fill="#ff7597" opacity="0.5"/><ellipse cx="46" cy="38" rx="3.5" ry="2" fill="#ff7597" opacity="0.5"/></g></svg>`,
+  bunny: `<svg class="avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g><ellipse cx="22" cy="16" rx="6" ry="16" fill="#ffd6e0"/><ellipse cx="42" cy="16" rx="6" ry="16" fill="#ffd6e0"/><circle cx="32" cy="38" r="20" fill="#fff"/><circle cx="24" cy="36" r="3" fill="#2d3436"/><circle cx="40" cy="36" r="3" fill="#2d3436"/><polygon points="32,41 29,44 35,44" fill="#ff7597"/><ellipse cx="18" cy="40" rx="3" ry="2" fill="#ff7597" opacity="0.6"/><ellipse cx="46" cy="40" rx="3" ry="2" fill="#ff7597" opacity="0.6"/></g></svg>`,
+  bear: `<svg class="avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g><circle cx="16" cy="18" r="8" fill="#e1b12c"/><circle cx="48" cy="18" r="8" fill="#e1b12c"/><circle cx="32" cy="36" r="22" fill="#fbc531"/><ellipse cx="32" cy="40" rx="9" ry="7" fill="#fff"/><circle cx="24" cy="32" r="3" fill="#2d3436"/><circle cx="40" cy="32" r="3" fill="#2d3436"/><ellipse cx="32" cy="38" rx="3" ry="2" fill="#2d3436"/></g></svg>`,
+  shiba: `<svg class="avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g><path d="M12 18 L24 10 L26 28 Z" fill="#e67e22"/><path d="M52 18 L40 10 L38 28 Z" fill="#e67e22"/><circle cx="32" cy="36" r="21" fill="#f39c12"/><path d="M20 44 C20 30, 44 30, 44 44 C44 54, 20 54, 20 44 Z" fill="#fff"/><circle cx="24" cy="32" r="3" fill="#2d3436"/><circle cx="40" cy="32" r="3" fill="#2d3436"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#2d3436"/></g></svg>`,
+  fox: `<svg class="avatar-svg" viewBox="0 0 64 64" width="42" height="42"><g><path d="M10 14 L24 10 L28 30 Z" fill="#e74c3c"/><path d="M54 14 L40 10 L36 30 Z" fill="#e74c3c"/><circle cx="32" cy="36" r="21" fill="#e67e22"/><polygon points="32,56 18,36 46,36" fill="#fff"/><circle cx="23" cy="32" r="3" fill="#2d3436"/><circle cx="41" cy="32" r="3" fill="#2d3436"/><circle cx="32" cy="48" r="3" fill="#2d3436"/></g></svg>`
 };
 
 const CUSTOMERS = [
@@ -216,7 +209,6 @@ const CUSTOMERS = [
   { name: 'توتو الثعلوبة', avatar: ANIMAL_AVATARS.fox }
 ];
 
-// الأجهزة المتاحة للشراء بالمتجر
 const SHOP_MACHINES = {
   espresso_machine: { id: 'espresso_machine', name: 'آلة الإسبريسو الاحترافية', price: 100, icon: '☕', desc: 'تفتح تحضير القهوة، الإسبريسو واللاتيه' },
   boba_brewer: { id: 'boba_brewer', name: 'صانعة شاي البوبا', price: 150, icon: '🧋', desc: 'تفتح المشروبات المتقدمة وشاي الخوخ' },
@@ -280,9 +272,6 @@ const INGREDIENT_NAMES = {
   baked: { name: 'مخبوز بالفرن', icon: '🔥', minLevel: 1 }
 };
 
-// ==========================================
-// 3. حالة اللعبة المحلية والشبكية
-// ==========================================
 const state = {
   mode: 'solo',
   roomCode: '',
@@ -318,10 +307,7 @@ const state = {
   leaderboard: JSON.parse(localStorage.getItem('pookie_leaderboard') || '[]')
 };
 
-// ==========================================
-// 4. عناصر واجهة المستخدم (DOM Elements)
-// ==========================================
-let screens, statsBar, playerNameInput, avatarChoices, roomWaitingBox, displayRoomCode, copyRoomLinkBtn, playersChipsContainer, startShiftBtn, ordersRack, sharedItemsContainer, currentItemVisual, stationHint, ingredientsGrid, toastShout, toggleMusicBtn;
+let screens, statsBar, playerNameInput, roomWaitingBox, displayRoomCode, copyRoomLinkBtn, playersChipsContainer, startShiftBtn, ordersRack, sharedItemsContainer, currentItemVisual, stationHint, ingredientsGrid, toastShout, toggleMusicBtn;
 
 function initDOMReferences() {
   screens = {
@@ -331,7 +317,6 @@ function initDOMReferences() {
   };
   statsBar = document.getElementById('gameStatsBar');
   playerNameInput = document.getElementById('playerNameInput');
-  avatarChoices = document.querySelectorAll('.avatar-choice');
   roomWaitingBox = document.getElementById('roomWaitingBox');
   displayRoomCode = document.getElementById('displayRoomCode');
   copyRoomLinkBtn = document.getElementById('copyRoomLinkBtn');
@@ -346,13 +331,8 @@ function initDOMReferences() {
   toggleMusicBtn = document.getElementById('toggleMusicBtn');
 }
 
-// ==========================================
-// 5. التهيئة والأحداث (Init & Setup)
-// ==========================================
 function initApp() {
-  injectAnimationStyles();
   initDOMReferences();
-
   setupAvatarChoiceElements();
 
   playerNameInput.addEventListener('input', (e) => {
@@ -412,37 +392,6 @@ function initApp() {
   renderLeaderboard();
 }
 
-function injectAnimationStyles() {
-  if (document.getElementById('pookieAnimStyles')) return;
-  const style = document.createElement('style');
-  style.id = 'pookieAnimStyles';
-  style.innerHTML = `
-    @keyframes avatarBounce {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-4px) scale(1.03); }
-    }
-    .bounce-anim {
-      animation: avatarBounce 2.4s ease-in-out infinite;
-      transform-origin: center bottom;
-    }
-    .animated-avatar-svg {
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-    }
-    .shop-card-machine {
-      background: #fff;
-      border: 2px solid var(--pink-subtle);
-      border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    }
-  `;
-  document.head.appendChild(style);
-}
-
 function setupAvatarChoiceElements() {
   const container = document.querySelector('.avatar-choices');
   if (!container) return;
@@ -485,9 +434,6 @@ function showToast(text, avatarSvg = '✨') {
   }, 2400);
 }
 
-// ==========================================
-// 6. شبكة الاتصال
-// ==========================================
 class CuteNetwork {
   constructor() {
     this.clientId = 'client_' + Math.random().toString(36).substring(2, 9);
@@ -758,7 +704,6 @@ function sendShout(msg) {
   });
 }
 
-// دالة النسخ المباشرة والخصية فقط بطلب المستخدم (بدون خيارات مشاركة أجهزة أخرى)
 function copyDirectLink() {
   audio.playPop();
   const directUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
@@ -806,9 +751,6 @@ function renderPlayersChips() {
   });
 }
 
-// ==========================================
-// 7. اللعبة ومتجر الأجهزة وقائمة المتصدرين
-// ==========================================
 function setupStopShiftButton() {
   const headerControls = document.querySelector('.header-controls');
   if (headerControls && !document.getElementById('stopShiftBtn')) {
@@ -1042,9 +984,6 @@ function updateStatsDisplay() {
   }
 }
 
-// ==========================================
-// 8. عرض تذاكر الزبائن وطاولة التجهيز
-// ==========================================
 function renderOrders() {
   if (!ordersRack) return;
   ordersRack.innerHTML = '';
@@ -1180,9 +1119,6 @@ function handleServeOrder(orderId, itemId, senderName) {
   }
 }
 
-// ==========================================
-// 9. محطات العمل ومتجر الآلات
-// ==========================================
 function renderStationView() {
   if (!ingredientsGrid) return;
   ingredientsGrid.innerHTML = '';
@@ -1597,6 +1533,7 @@ function renderShopStation() {
 
     const card = document.createElement('div');
     card.className = 'shop-card-machine';
+    card.style.cssText = 'background:#fff; border:1.5px solid var(--pink-subtle); border-radius:14px; padding:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; grid-column:1/-1;';
     card.innerHTML = `
       <div style="display:flex; align-items:center; gap:10px;">
         <span style="font-size:28px;">${item.icon}</span>
@@ -1638,9 +1575,6 @@ function renderShopStation() {
   });
 }
 
-// ==========================================
-// 10. التشغيل التلقائي المضمون
-// ==========================================
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {

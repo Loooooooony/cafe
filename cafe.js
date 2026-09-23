@@ -427,10 +427,10 @@ function injectAnimationStyles() {
       0%, 100% { transform: translateY(0) scale(1); }
       50% { transform: translateY(-4px) scale(1.03); }
     }
-    .bounce-anim {
-      animation: avatarBounce 2.4s ease-in-out infinite;
-      transform-origin: center bottom;
-    }
+  .bounce-anim {
+  animation: none;
+  transform-origin: center bottom;
+}
     .animated-avatar-svg {
       filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }

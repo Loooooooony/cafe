@@ -1,6 +1,6 @@
 /**
  * كافيه البنات المشترك | Pookie Cozy Cafe Rush
- * Game Engine, Audio Synthesizer & WebRTC PeerJS Multiplayer
+ * Game Engine, Audio Synthesizer & WebRTC/BroadcastChannel Network
  */
 
 // ==========================================
@@ -61,7 +61,6 @@ class CuteAudio {
     this.init();
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
-    // جرس الخدمة النقي (Service Bell)
     [1046.5, 2093].forEach((freq, idx) => {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
@@ -252,7 +251,6 @@ const RECIPES = [
   }
 ];
 
-// قاموس مسميات المكونات
 const INGREDIENT_NAMES = {
   cup: { name: 'كوب فارغ', icon: '🥛' },
   ice: { name: 'ثلج', icon: '🧊' },
@@ -279,12 +277,12 @@ const INGREDIENT_NAMES = {
 // 3. حالة اللعبة المحلية والشبكية
 // ==========================================
 const state = {
-  mode: 'solo', // 'solo' | 'host' | 'client'
+  mode: 'solo',
   peer: null,
   roomCode: '',
   isHost: false,
-  connections: [], // قائمة الاتصالات إذا كان مضيف
-  hostConn: null,  // اتصال المضيف إذا كان عميل
+  connections: [],
+  hostConn: null,
 
   player: {
     name: 'باريستا بوكي',
@@ -292,9 +290,8 @@ const state = {
   },
   players: [],
 
-  // حالة الشفت الحي
   shiftActive: false,
-  shiftTimeRemaining: 90, // بالثواني
+  shiftTimeRemaining: 90,
   shiftInterval: null,
   orderInterval: null,
 
@@ -303,10 +300,9 @@ const state = {
   servedCount: 0,
   missedCount: 0,
 
-  orders: [],        // تذاكر الزبائن النشطة
-  sharedItems: [],   // طاولة التجهيز المشتركة
+  orders: [],
+  sharedItems: [],
 
-  // أداة العمل الحالية في المحطة
   currentDrink: {
     ingredients: []
   },
@@ -315,7 +311,7 @@ const state = {
   },
   isOvenBaking: false,
 
-  selectedStation: 'drinks' // 'drinks' | 'bakery' | 'serving'
+  selectedStation: 'drinks'
 };
 
 // ==========================================
@@ -349,7 +345,6 @@ const toggleMusicBtn = document.getElementById('toggleMusicBtn');
 // 5. التهيئة الأولية والأحداث (Init & Setup)
 // ==========================================
 function initApp() {
-  // تفقد إذا كان الرابط يحتوي على كود غرفة للانضمام المباشر
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
   if (roomParam) {
@@ -357,7 +352,6 @@ function initApp() {
     showToast(`تم اكتشاف كود الغرفة: ${roomParam} 💖`);
   }
 
-  // اختيار الصورة الرمزية
   avatarChoices.forEach(choice => {
     choice.addEventListener('click', () => {
       audio.playPop();
@@ -367,19 +361,16 @@ function initApp() {
     });
   });
 
-  // تحديث الاسم
   playerNameInput.addEventListener('input', (e) => {
     state.player.name = e.target.value.trim() || 'باريستا بوكي';
   });
 
-  // تبديل الموسيقى
   toggleMusicBtn.addEventListener('click', () => {
     const isPlaying = audio.toggleMusic();
     toggleMusicBtn.textContent = isPlaying ? '🎵' : '🔇';
     showToast(isPlaying ? 'تم تشغيل موسيقى لوفاي 🎶' : 'تم كتم الموسيقى 🔇');
   });
 
-  // أزرار إنشاء وانضمام الغرفة
   document.getElementById('createRoomBtn').addEventListener('click', handleCreateRoom);
   document.getElementById('joinRoomBtn').addEventListener('click', handleJoinRoom);
   document.getElementById('soloPlayBtn').addEventListener('click', handleSoloPlay);
@@ -391,7 +382,6 @@ function initApp() {
 
   copyRoomLinkBtn.addEventListener('click', copyDirectLink);
 
-  // أزرار التبديل بين المحطات
   document.querySelectorAll('.station-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       audio.playPop();
@@ -402,7 +392,6 @@ function initApp() {
     });
   });
 
-  // أزرار الصرخات الحماسية السريعة
   document.querySelectorAll('.shout-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const msg = btn.dataset.shout;
@@ -426,7 +415,7 @@ function showToast(text, avatar = '✨') {
 }
 
 // ==========================================
-// 6. الشبكة وتعدد اللاعبين (Dual-Engine: BroadcastChannel + MQTT WebSocket)
+// 6. الشبكة وتعدد اللاعبين (BroadcastChannel + MQTT)
 // ==========================================
 class CuteNetwork {
   constructor() {
@@ -443,7 +432,6 @@ class CuteNetwork {
     this.roomCode = roomCode.toUpperCase();
     this.onMessageCallback = onMessage;
 
-    // 1. القناة المحلية المباشرة (BroadcastChannel) - فورية وبدون نت بين أي نوافذ على نفس الجهاز
     if (typeof BroadcastChannel !== 'undefined') {
       if (this.channel) {
         try { this.channel.close(); } catch(e){}
@@ -454,7 +442,6 @@ class CuteNetwork {
       };
     }
 
-    // 2. شبكة الإنترنت العامة (MQTT over WebSocket) للربط بين الجوالات
     if (window.mqtt) {
       if (this.mqttClient) {
         try { this.mqttClient.end(true); } catch(e){}
@@ -492,7 +479,7 @@ class CuteNetwork {
 
   receivePacket(packet) {
     if (!packet || typeof packet !== 'object') return;
-    if (packet.senderClientId === this.clientId) return; // تجاهل الرسائل الصادرة من نفس الجهاز
+    if (packet.senderClientId === this.clientId) return;
 
     if (packet.msgId) {
       if (this.seenMsgIds.has(packet.msgId)) return;
@@ -516,14 +503,12 @@ class CuteNetwork {
     };
     this.seenMsgIds.add(packet.msgId);
 
-    // إرسال محلياً
     if (this.channel) {
       try {
         this.channel.postMessage(packet);
       } catch(e) {}
     }
 
-    // إرسال عبر الإنترنت
     if (this.mqttClient && this.isMqttConnected) {
       try {
         this.mqttClient.publish(`pookie/cafe/${this.roomCode}/events`, JSON.stringify(packet));
@@ -574,7 +559,7 @@ function handleJoinRoom() {
   }
 
   if (state.isHost && state.roomCode === code) {
-    showToast('أنتِ المضيفة لهذه الغرفة حالياً 👑! افتحي نافذة ثانية بالمتصفح لتجربة الانضمام كصديقة 🌸');
+    showToast('أنتِ المضيفة لهذه الغرفة حالياً 👑!');
     return;
   }
 
@@ -596,7 +581,6 @@ function handleJoinRoom() {
   renderPlayersChips();
   showToast('جاري الاتصال بالكافيه... ☕✨');
 
-  // إرسال طلب الانضمام
   const sendJoin = () => {
     net.send({
       type: 'JOIN_REQUEST',
@@ -658,13 +642,15 @@ function handleIncomingData(data) {
     if (data.shiftActive && !state.shiftActive) {
       launchGameView();
     } else if (!data.shiftActive && state.shiftActive) {
-      endShift();
+      triggerEndShiftUI();
     }
 
     renderOrders();
     renderSharedItems();
     updateStatsDisplay();
     renderPlayersChips();
+  } else if (data.type === 'END_SHIFT_EVENT') {
+    triggerEndShiftUI();
   } else if (data.type === 'SHOUT') {
     audio.playAlert();
     showToast(data.message, data.avatar || '💬');
@@ -715,6 +701,12 @@ function renderPlayersChips() {
 // ==========================================
 // 7. دورة اللعبة والشفت (Game Loop & Shift)
 // ==========================================
+function resetWorkbenches() {
+  state.currentDrink = { ingredients: [] };
+  state.currentBakery = { ingredients: [] };
+  state.isOvenBaking = false;
+}
+
 function startShift() {
   audio.playDing();
   state.shiftActive = true;
@@ -730,18 +722,15 @@ function startShift() {
   launchGameView();
 
   if (state.isHost) {
-    // إنشاء طلبين مبدئيين
     spawnCustomerOrder();
     setTimeout(spawnCustomerOrder, 3000);
 
-    // مؤقت توليد الطلبات المنتظم
     state.orderInterval = setInterval(() => {
       if (state.orders.length < 4) {
         spawnCustomerOrder();
       }
     }, 12000);
 
-    // مؤقت صواني وصبر الزبائن وثواني الشفت
     state.shiftInterval = setInterval(() => {
       state.shiftTimeRemaining--;
       updateCustomerPatience();
@@ -769,11 +758,20 @@ function endShift() {
   if (state.shiftInterval) clearInterval(state.shiftInterval);
   if (state.orderInterval) clearInterval(state.orderInterval);
 
+  if (state.isHost) {
+    net.send({ type: 'END_SHIFT_EVENT' });
+  }
+
+  triggerEndShiftUI();
+  broadcastState();
+}
+
+function triggerEndShiftUI() {
+  state.shiftActive = false;
   audio.playFanfare();
   showScreen('results');
   statsBar.style.display = 'none';
 
-  // حساب النجوم
   let stars = '⭐';
   if (state.servedCount >= 8) stars = '⭐⭐⭐';
   else if (state.servedCount >= 4) stars = '⭐⭐';
@@ -783,8 +781,6 @@ function endShift() {
   document.getElementById('resultCoins').textContent = `${state.coins} 🪙`;
   document.getElementById('resultServed').textContent = state.servedCount;
   document.getElementById('resultMissed').textContent = state.missedCount;
-
-  broadcastState();
 }
 
 function spawnCustomerOrder() {
@@ -799,8 +795,8 @@ function spawnCustomerOrder() {
     recipeIcon: recipe.icon,
     recipeTags: recipe.tags,
     required: recipe.required,
-    maxPatience: 45, // 45 ثانية صبر
-    patience: 45
+    maxPatience: 80, // زيادة صبر الزبون إلى 80 ثانية لعدم الغضب بسرعة
+    patience: 80
   };
   state.orders.push(newOrder);
   audio.playDing();
@@ -813,7 +809,6 @@ function updateCustomerPatience() {
   for (let i = state.orders.length - 1; i >= 0; i--) {
     state.orders[i].patience--;
     if (state.orders[i].patience <= 0) {
-      // غادر الزبون زعلان
       const missed = state.orders.splice(i, 1)[0];
       state.missedCount++;
       state.score = Math.max(0, state.score - 15);
@@ -845,7 +840,7 @@ function renderOrders() {
 
   state.orders.forEach(order => {
     const card = document.createElement('div');
-    const isUrgent = order.patience < 15;
+    const isUrgent = order.patience < 20;
     card.className = `order-card ${isUrgent ? 'urgent' : ''}`;
 
     const pct = Math.max(0, (order.patience / order.maxPatience) * 100);
@@ -880,37 +875,42 @@ function renderSharedItems() {
     return;
   }
 
-  state.sharedItems.forEach((item, index) => {
-    const chip = document.createElement('div');
-    chip.className = 'shared-item-chip';
-    chip.innerHTML = `<span>${item.icon}</span> <span>${item.name}</span> <span style="font-size:10px; color:#a87400;">(${item.makerName})</span>`;
+  state.sharedItems.forEach((item) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex; flex-direction:column; align-items:center; background:var(--gold-light); border:1.5px solid #ffde8a; border-radius:12px; padding:6px 10px; gap:4px; margin-left:6px;';
     
-    chip.addEventListener('click', () => {
-      // إمكانية تسليم هذا الصحن
-      promptServeSharedItem(item, index);
+    card.innerHTML = `
+      <div style="font-size:12.5px; font-weight:800; color:#7a4f00; display:flex; align-items:center; gap:4px; white-space:nowrap;">
+        <span>${item.icon}</span> <span>${item.name}</span> <span style="font-size:10px; color:#a87400;">(${item.makerName})</span>
+      </div>
+      <button class="quick-serve-btn" style="background:var(--pink-main); color:#fff; border:none; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:800; cursor:pointer; width:100%; box-shadow:0 2px 6px rgba(255,117,151,0.3);">
+        🛎️ تقديم للزبون
+      </button>
+    `;
+    
+    const serveBtn = card.querySelector('.quick-serve-btn');
+    serveBtn.addEventListener('click', () => {
+      directServeSharedItem(item);
     });
 
-    sharedItemsContainer.appendChild(chip);
+    sharedItemsContainer.appendChild(card);
   });
 }
 
-function promptServeSharedItem(item, itemIdx) {
-  // تفقد إذا كان هناك طلب يطابق هذا العنصر
+function directServeSharedItem(item) {
   const matchedOrder = state.orders.find(o => o.recipeId === item.recipeId);
   if (!matchedOrder) {
     showToast(`هذا الصنف (${item.name}) لا يطابق أي طلب مفتوح حالياً!`);
     return;
   }
 
-  if (confirm(`هل ترغبين في تقديم (${item.name}) للزبون (${matchedOrder.customerName})؟ 🛎️`)) {
-    handleServeOrder(matchedOrder.id, item.id, state.player.name);
-    net.send({
-      type: 'SERVE_ORDER',
-      orderId: matchedOrder.id,
-      itemId: item.id,
-      senderName: state.player.name
-    });
-  }
+  handleServeOrder(matchedOrder.id, item.id, state.player.name);
+  net.send({
+    type: 'SERVE_ORDER',
+    orderId: matchedOrder.id,
+    itemId: item.id,
+    senderName: state.player.name
+  });
 }
 
 function handleServeOrder(orderId, itemId, senderName) {
@@ -921,7 +921,6 @@ function handleServeOrder(orderId, itemId, senderName) {
     const order = state.orders.splice(orderIdx, 1)[0];
     state.sharedItems.splice(itemIdx, 1);
 
-    // حساب النقاط والعملات
     state.score += 50 + Math.floor(order.patience);
     state.coins += 15;
     state.servedCount++;
@@ -1030,12 +1029,12 @@ function updateDrinkVisual() {
     <span class="item-cup-preview">${previewIcon}</span>
     <div class="item-ingredients-tags">${badges}</div>
     <div style="display:flex; gap:8px; margin-top:10px;">
-      <button class="btn-primary" id="finishDrinkBtn" style="padding:8px 16px; font-size:13px;">ضع على طاولة التجهيز 🛎️</button>
-      <button class="btn-secondary" id="clearDrinkBtn" style="padding:8px 14px; font-size:13px;">تفريغ 🗑️</button>
+      <button class="btn-primary" id="placeDrinkBtn" style="font-size:12px; padding:6px 12px;">✨ وضع على طاولة التجهيز</button>
+      <button class="btn-solo" id="clearDrinkBtn" style="font-size:12px; padding:6px 12px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
     </div>
   `;
 
-  document.getElementById('finishDrinkBtn').addEventListener('click', finishDrink);
+  document.getElementById('placeDrinkBtn').addEventListener('click', finishDrink);
   document.getElementById('clearDrinkBtn').addEventListener('click', () => {
     audio.playPop();
     state.currentDrink.ingredients = [];
@@ -1044,43 +1043,51 @@ function updateDrinkVisual() {
 }
 
 function finishDrink() {
-  const ingredients = state.currentDrink.ingredients;
-  if (ingredients.length === 0) return;
+  const ing = state.currentDrink.ingredients;
+  const matchedRecipe = RECIPES.find(r => r.type === 'drink' && r.required.every(req => ing.includes(req)));
 
-  // البحث عن أي وصفة تطابق هذه المكونات
-  const matchedRecipe = RECIPES.find(r => {
-    if (r.type !== 'drink') return false;
-    return r.required.every(req => ingredients.includes(req));
-  });
-
-  const itemName = matchedRecipe ? matchedRecipe.name : 'مشروب سبيشل لطيف';
-  const itemIcon = matchedRecipe ? matchedRecipe.icon : '🧋';
-  const recipeId = matchedRecipe ? matchedRecipe.id : 'custom_drink';
+  if (!matchedRecipe) {
+    showToast('هذه الخلطة لا تطابق أي مشروب في القائمة! تأكدي من المكونات 🍵');
+    audio.playAlert();
+    return;
+  }
 
   const newItem = {
-    id: 'item_' + Date.now() + '_' + Math.random(),
-    name: itemName,
-    icon: itemIcon,
-    recipeId: recipeId,
-    makerName: state.player.name,
-    ingredients: [...ingredients]
+    id: 'item_' + Date.now() + '_' + Math.floor(Math.random()*100),
+    recipeId: matchedRecipe.id,
+    name: matchedRecipe.name,
+    icon: matchedRecipe.icon,
+    makerName: state.player.name
   };
 
-  placeOnSharedCounter(newItem);
+  state.sharedItems.push(newItem);
+  audio.playDing();
+  showToast(`تم تجهيز ${matchedRecipe.name} ووضعها على الطاولة! ✨`);
+
+  net.send({
+    type: 'ADD_SHARED_ITEM',
+    item: newItem,
+    senderName: state.player.name
+  });
+
   state.currentDrink.ingredients = [];
   updateDrinkVisual();
+  renderSharedItems();
+  if (state.isHost) broadcastState();
 }
 
 function renderBakeryStation() {
-  stationHint.textContent = 'اختاري العجينة، اخبزيها بالفرن، ثم أضيفي الصوصات والتزيين!';
+  stationHint.textContent = 'اختاري العجينة، ثم اخبزيها في الفرن، وأضيفي الطبقات والتزيين!';
+
   updateBakeryVisual();
 
   const bakeryIngredients = [
     { key: 'donut_base', name: 'عجينة دونات', icon: '🍩' },
     { key: 'cake_base', name: 'طبقات كيك', icon: '🍰' },
     { key: 'pancake_base', name: 'خليط بانكيك', icon: '🥞' },
+    { key: 'bake_action', name: 'خبز بالفرن 🔥', icon: '🔥', action: true },
     { key: 'pink_glaze', name: 'تغطية وردية', icon: '🌸' },
-    { key: 'sprinkles', name: 'سبرنكلز ملون', icon: '✨' },
+    { key: 'sprinkles', name: 'سبرنكلز', icon: '✨' },
     { key: 'cream', name: 'كريمة خفق', icon: '🍦' },
     { key: 'strawberry', name: 'فراولة', icon: '🍓' },
     { key: 'butter', name: 'مكعب زبدة', icon: '🧈' },
@@ -1093,7 +1100,11 @@ function renderBakeryStation() {
     card.innerHTML = `<span class="ing-icon">${ing.icon}</span><span class="ing-name">${ing.name}</span>`;
 
     card.addEventListener('click', () => {
-      addBakeryIngredient(ing.key);
+      if (ing.action) {
+        bakeInOven();
+      } else {
+        addBakeryIngredient(ing.key);
+      }
     });
 
     ingredientsGrid.appendChild(card);
@@ -1102,25 +1113,50 @@ function renderBakeryStation() {
 
 function addBakeryIngredient(key) {
   audio.playPop();
-  const current = state.currentBakery.ingredients;
 
   const bases = ['donut_base', 'cake_base', 'pancake_base'];
+  const ing = state.currentBakery.ingredients;
+
   if (bases.includes(key)) {
-    // قاعدة جديدة تستبدل القديمة إذا لم تخبز
-    state.currentBakery.ingredients = [key];
+    if (ing.some(b => bases.includes(b))) {
+      showToast('القاعدة موجودة بالفعل على صينية التحضير!');
+      return;
+    }
+  } else {
+    if (!ing.some(b => bases.includes(b))) {
+      showToast('اختاري قاعدة الكيك أو الدونات أو البانكيك أولاً! 🧁');
+      return;
+    }
+  }
+
+  if (!ing.includes(key)) {
+    ing.push(key);
     updateBakeryVisual();
+  }
+}
+
+function bakeInOven() {
+  const ing = state.currentBakery.ingredients;
+  if (ing.length === 0) {
+    showToast('الصينية فارغة! ضعي عجينة أولاً للخبز 🔥');
+    return;
+  }
+  if (ing.includes('baked')) {
+    showToast('تم خبز هذا الصنف بالفعل! 🔥');
     return;
   }
 
-  if (!bases.some(b => current.includes(b))) {
-    showToast('اختاري عجينة المخبوزات أولاً (دونات أو كيك أو بانكيك)! 🍩');
-    return;
-  }
+  audio.playPour();
+  showToast('جاري الخبز بالفرن... 🧁🔥');
+  state.isOvenBaking = true;
 
-  if (!current.includes(key)) {
-    current.push(key);
+  setTimeout(() => {
+    state.isOvenBaking = false;
+    ing.push('baked');
+    audio.playDing();
+    showToast('تم الخبز بنجاح! تفكحي الصينية الآن! ✨');
     updateBakeryVisual();
-  }
+  }, 1500);
 }
 
 function updateBakeryVisual() {
@@ -1129,17 +1165,16 @@ function updateBakeryVisual() {
 
   if (current.length === 0) {
     visualContainer.innerHTML = `
-      <span class="item-cup-preview" style="opacity:0.4;">🍩</span>
-      <span style="font-size:12.5px; color:var(--text-muted);">طاولة الحلويات فارغة. اختاري عجينة من الأسفل!</span>
+      <span class="item-cup-preview" style="opacity:0.4;">🧁</span>
+      <span style="font-size:12.5px; color:var(--text-muted);">طاولة الفرن فارغة. اختاري قاعدة حلى للبدء!</span>
     `;
     return;
   }
 
-  let previewIcon = '🍩';
-  if (current.includes('cake_base')) previewIcon = '🍰';
-  if (current.includes('pancake_base')) previewIcon = '🥞';
-
-  const isBaked = current.includes('baked');
+  let previewIcon = '🧁';
+  if (current.includes('donut_base')) previewIcon = '🍩';
+  else if (current.includes('cake_base')) previewIcon = '🍰';
+  else if (current.includes('pancake_base')) previewIcon = '🥞';
 
   const badges = current.map(k => {
     const info = INGREDIENT_NAMES[k] || { name: k, icon: '✨' };
@@ -1147,127 +1182,86 @@ function updateBakeryVisual() {
   }).join('');
 
   visualContainer.innerHTML = `
-    <span class="item-cup-preview ${state.isOvenBaking ? 'brand-icon' : ''}">${previewIcon}</span>
+    <span class="item-cup-preview">${previewIcon}</span>
     <div class="item-ingredients-tags">${badges}</div>
     <div style="display:flex; gap:8px; margin-top:10px;">
-      ${!isBaked ? `<button class="btn-primary" id="bakeOvenBtn" style="padding:8px 16px; font-size:13px; background:#ff8b3d;" ${state.isOvenBaking ? 'disabled' : ''}>خبز في الفرن 🔥</button>` : ''}
-      <button class="btn-primary" id="finishBakeryBtn" style="padding:8px 16px; font-size:13px;" ${!isBaked ? 'disabled style="opacity:0.5;"' : ''}>ضع على طاولة التجهيز 🛎️</button>
-      <button class="btn-secondary" id="clearBakeryBtn" style="padding:8px 14px; font-size:13px;">تفريغ 🗑️</button>
+      <button class="btn-primary" id="placeBakeryBtn" style="font-size:12px; padding:6px 12px;">✨ وضع على طاولة التجهيز</button>
+      <button class="btn-solo" id="clearBakeryBtn" style="font-size:12px; padding:6px 12px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
     </div>
   `;
 
-  const bakeBtn = document.getElementById('bakeOvenBtn');
-  if (bakeBtn) {
-    bakeBtn.addEventListener('click', startBakingOven);
-  }
-
-  document.getElementById('finishBakeryBtn').addEventListener('click', finishBakery);
+  document.getElementById('placeBakeryBtn').addEventListener('click', finishBakery);
   document.getElementById('clearBakeryBtn').addEventListener('click', () => {
     audio.playPop();
     state.currentBakery.ingredients = [];
-    state.isOvenBaking = false;
     updateBakeryVisual();
   });
-}
-
-function startBakingOven() {
-  if (state.isOvenBaking) return;
-  state.isOvenBaking = true;
-  audio.playPour();
-  showToast('يخبز في الفرن الآن.. ثواني ويجهز! 🔥');
-  updateBakeryVisual();
-
-  setTimeout(() => {
-    state.isOvenBaking = false;
-    state.currentBakery.ingredients.push('baked');
-    audio.playDing();
-    showToast('رن جرس الفرن! جهز المخبوز بنجاح 🛎️✨');
-    updateBakeryVisual();
-  }, 2500);
 }
 
 function finishBakery() {
-  const ingredients = state.currentBakery.ingredients;
-  if (!ingredients.includes('baked')) {
-    showToast('يجب خبزها في الفرن أولاً! 🔥');
+  const ing = state.currentBakery.ingredients;
+  const matchedRecipe = RECIPES.find(r => r.type === 'bakery' && r.required.every(req => ing.includes(req)));
+
+  if (!matchedRecipe) {
+    showToast('هذه الوصفة غير مكتملة أو لم تُخبز بالفرن بعد! 🍰');
+    audio.playAlert();
     return;
   }
 
-  const matchedRecipe = RECIPES.find(r => {
-    if (r.type !== 'bakery') return false;
-    return r.required.every(req => ingredients.includes(req));
-  });
-
-  const itemName = matchedRecipe ? matchedRecipe.name : 'حلى كوايي فاخر';
-  const itemIcon = matchedRecipe ? matchedRecipe.icon : '🍰';
-  const recipeId = matchedRecipe ? matchedRecipe.id : 'custom_pastry';
-
   const newItem = {
-    id: 'item_' + Date.now() + '_' + Math.random(),
-    name: itemName,
-    icon: itemIcon,
-    recipeId: recipeId,
-    makerName: state.player.name,
-    ingredients: [...ingredients]
+    id: 'item_' + Date.now() + '_' + Math.floor(Math.random()*100),
+    recipeId: matchedRecipe.id,
+    name: matchedRecipe.name,
+    icon: matchedRecipe.icon,
+    makerName: state.player.name
   };
 
-  placeOnSharedCounter(newItem);
-  state.currentBakery.ingredients = [];
-  updateBakeryVisual();
-}
-
-function placeOnSharedCounter(item) {
+  state.sharedItems.push(newItem);
   audio.playDing();
-  showToast(`وضعت ${item.name} على طاولة التجهيز! ✨`, item.icon);
-  state.sharedItems.push(item);
-  renderSharedItems();
+  showToast(`تم التجهيز: ${matchedRecipe.name} جاهزة للتقديم! ✨`);
 
   net.send({
     type: 'ADD_SHARED_ITEM',
-    item: item,
+    item: newItem,
     senderName: state.player.name
   });
+
+  state.currentBakery.ingredients = [];
+  updateBakeryVisual();
+  renderSharedItems();
+  if (state.isHost) broadcastState();
 }
 
 function renderServingStation() {
-  stationHint.textContent = 'استلمي الطلبات الجاهزة من طاولة التجهيز وسلّميها للزبائن لدفع الحساب!';
+  stationHint.textContent = 'تفحصي الطلبات الحالية وطاولة التجهيز، وقدمي الطلبات الجاهزة للزبائن!';
+
   currentItemVisual.innerHTML = `
-    <span class="item-cup-preview">🛎️</span>
-    <div style="font-size:13.5px; font-weight:800; color:var(--text-dark);">محطة التسليم والفحص</div>
-    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">اضغطي على أي طلب في تذاكر الزبائن لتسليم الصحن المطابق له!</div>
+    <span style="font-size:32px;">🛎️</span>
+    <span style="font-size:13px; color:var(--text-dark); font-weight:700;">محطة الفحص والتسليم السريع</span>
+    <span style="font-size:11.5px; color:var(--text-muted);">اضغطي زر (🛎️ تقديم للزبون) تحت الصنف الجاهز للتسليم الفوري!</span>
   `;
 
-  // عرض بطاقات الزبائن للاختيار المباشر
-  state.orders.forEach(order => {
+  ingredientsGrid.innerHTML = '';
+  if (state.orders.length === 0) {
+    ingredientsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">لا توجد طلبات جارية الآن 🎉</div>';
+    return;
+  }
+
+  state.orders.forEach(ord => {
     const card = document.createElement('div');
-    card.className = 'ingredient-card';
-    card.style.padding = '12px';
+    card.style.cssText = 'background:#fff; border-radius:12px; padding:10px; border:1px solid #ffd6e0; display:flex; flex-direction:column; gap:6px; align-items:center; text-align:center;';
     card.innerHTML = `
-      <span class="ing-icon">${order.customerAvatar}</span>
-      <span class="ing-name">${order.customerName}</span>
-      <span style="font-size:11px; color:var(--pink-main); font-weight:800;">${order.recipeName}</span>
+      <div style="font-size:20px;">${ord.recipeIcon}</div>
+      <div style="font-weight:800; font-size:12px; color:var(--text-dark);">${ord.recipeName}</div>
+      <div style="font-size:11px; color:var(--pink-main); font-weight:700;">للزبون: ${ord.customerAvatar} ${ord.customerName}</div>
     `;
-
-    card.addEventListener('click', () => {
-      // تفقد إذا كان هناك صنف مطابق في الطاولة
-      const item = state.sharedItems.find(i => i.recipeId === order.recipeId);
-      if (item) {
-        promptServeSharedItem(item, 0);
-      } else {
-        audio.playAlert();
-        showToast(`لا يوجد (${order.recipeName}) جاهز على طاولة التجهيز بعد!`);
-      }
-    });
-
     ingredientsGrid.appendChild(card);
   });
 }
 
-function resetWorkbenches() {
-  state.currentDrink.ingredients = [];
-  state.currentBakery.ingredients = [];
-  state.isOvenBaking = false;
-}
-
-// بدء التطبيق
-document.addEventListener('DOMContentLoaded', initApp);
+// ==========================================
+// 10. التشغيل عند التحميل (Window Load)
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+  initApp();
+});

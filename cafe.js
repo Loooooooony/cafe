@@ -1,6 +1,6 @@
 /**
  * كافيه البنات المشترك | Pookie Cozy Cafe Rush
- * Game Engine, Audio Synthesizer & WebRTC/BroadcastChannel Network
+ * Game Engine, Levels System, Dynamic Motion & WebRTC Network
  */
 
 // ==========================================
@@ -143,10 +143,10 @@ class CuteAudio {
   startLofiLoop() {
     if (!this.ctx) return;
     const chords = [
-      [261.63, 329.63, 392.00, 493.88], // Cmaj7
-      [220.00, 261.63, 329.63, 392.00], // Am7
-      [174.61, 220.00, 261.63, 329.63], // Fmaj7
-      [196.00, 246.94, 293.66, 349.23]  // G7
+      [261.63, 329.63, 392.00, 493.88],
+      [220.00, 261.63, 329.63, 392.00],
+      [174.61, 220.00, 261.63, 329.63],
+      [196.00, 246.94, 293.66, 349.23]
     ];
     let chordIdx = 0;
     const playChord = () => {
@@ -182,7 +182,7 @@ class CuteAudio {
 const audio = new CuteAudio();
 
 // ==========================================
-// 2. قائمة الوصفات والزبائن (Recipes & Customers)
+// 2. نظام اللفلات والمكونات المقفولة
 // ==========================================
 const CUSTOMERS = [
   { name: 'ميمي القطة', avatar: '🐱' },
@@ -198,6 +198,7 @@ const RECIPES = [
     name: 'ماتشا مثلجة بالبوبا',
     type: 'drink',
     icon: '🧋',
+    minLevel: 1,
     tags: ['كوب 🥛', 'ثلج 🧊', 'ماتشا 🍵', 'حليب 🥛', 'بوبا ⚫'],
     required: ['cup', 'ice', 'matcha', 'milk', 'boba']
   },
@@ -206,71 +207,79 @@ const RECIPES = [
     name: 'حليب الفراولة بالكريمة',
     type: 'drink',
     icon: '🍓',
+    minLevel: 1,
     tags: ['كوب 🥛', 'ثلج 🧊', 'فراولة 🍓', 'حليب 🥛', 'كريمة 🍦'],
     required: ['cup', 'ice', 'strawberry', 'milk', 'cream']
-  },
-  {
-    id: 'spanish_latte',
-    name: 'سبانش كولد لاتيه',
-    type: 'drink',
-    icon: '☕',
-    tags: ['كوب 🥛', 'ثلج 🧊', 'قهوة ☕', 'حليب 🥛', 'كراميل 🍯'],
-    required: ['cup', 'ice', 'coffee', 'milk', 'caramel']
-  },
-  {
-    id: 'peach_tea',
-    name: 'شاي خوخ منعش بالبوبا',
-    type: 'drink',
-    icon: '🍑',
-    tags: ['كوب 🥛', 'ثلج 🧊', 'شاي 🫖', 'خوخ 🍑', 'بوبا ⚫'],
-    required: ['cup', 'ice', 'tea', 'peach', 'boba']
   },
   {
     id: 'pink_donut',
     name: 'دونات وردية بالسبرنكلز',
     type: 'bakery',
     icon: '🍩',
+    minLevel: 1,
     tags: ['دونات 🍩', 'خبز بالفرن 🔥', 'تغطية وردية 🌸', 'سبرنكلز ✨'],
     required: ['donut_base', 'baked', 'pink_glaze', 'sprinkles']
+  },
+  {
+    id: 'spanish_latte',
+    name: 'سبانش كولد لاتيه',
+    type: 'drink',
+    icon: '☕',
+    minLevel: 2,
+    tags: ['كوب 🥛', 'ثلج 🧊', 'قهوة ☕', 'حليب 🥛', 'كراميل 🍯'],
+    required: ['cup', 'ice', 'coffee', 'milk', 'caramel']
   },
   {
     id: 'strawberry_cake',
     name: 'كيكة الفراولة السحابية',
     type: 'bakery',
     icon: '🍰',
+    minLevel: 2,
     tags: ['كيك 🍰', 'خبز بالفرن 🔥', 'كريمة 🍦', 'فراولة 🍓'],
     required: ['cake_base', 'baked', 'cream', 'strawberry']
+  },
+  {
+    id: 'peach_tea',
+    name: 'شاي خوخ منعش بالبوبا',
+    type: 'drink',
+    icon: '🍑',
+    minLevel: 3,
+    tags: ['كوب 🥛', 'ثلج 🧊', 'شاي 🫖', 'خوخ 🍑', 'بوبا ⚫'],
+    required: ['cup', 'ice', 'tea', 'peach', 'boba']
   },
   {
     id: 'honey_pancake',
     name: 'بان كيك العسل والزبدة',
     type: 'bakery',
     icon: '🥞',
+    minLevel: 3,
     tags: ['بان كيك 🥞', 'خبز بالفرن 🔥', 'زبدة 🧈', 'عسل 🍯'],
     required: ['pancake_base', 'baked', 'butter', 'honey']
   }
 ];
 
 const INGREDIENT_NAMES = {
-  cup: { name: 'كوب فارغ', icon: '🥛' },
-  ice: { name: 'ثلج', icon: '🧊' },
-  matcha: { name: 'ماتشا', icon: '🍵' },
-  strawberry: { name: 'فراولة', icon: '🍓' },
-  coffee: { name: 'قهوة', icon: '☕' },
-  tea: { name: 'شاي مثلج', icon: '🫖' },
-  peach: { name: 'خوخ', icon: '🍑' },
-  milk: { name: 'حليب نقي', icon: '🥛' },
-  boba: { name: 'بوبا تابيوكا', icon: '⚫' },
-  cream: { name: 'كريمة خفق', icon: '🍦' },
-  caramel: { name: 'صوص كراميل', icon: '🍯' },
-  donut_base: { name: 'عجينة دونات', icon: '🍩' },
-  cake_base: { name: 'طبقات كيك', icon: '🍰' },
-  pancake_base: { name: 'خليط بانكيك', icon: '🥞' },
-  baked: { name: 'مخبوز بالفرن', icon: '🔥' },
-  pink_glaze: { name: 'تغطية وردية', icon: '🌸' },
-  sprinkles: { name: 'سبرنكلز ملون', icon: '✨' },
-  butter: { name: 'مكعب زبدة', icon: '🧈' },
-  honey: { name: 'عسل صافي', icon: '🍯' }
+  cup: { name: 'كوب فارغ', icon: '🥛', minLevel: 1 },
+  ice: { name: 'ثلج', icon: '🧊', minLevel: 1 },
+  matcha: { name: 'ماتشا', icon: '🍵', minLevel: 1 },
+  strawberry: { name: 'فراولة', icon: '🍓', minLevel: 1 },
+  milk: { name: 'حليب نقي', icon: '🥛', minLevel: 1 },
+  boba: { name: 'بوبا تابيوكا', icon: '⚫', minLevel: 1 },
+  cream: { name: 'كريمة خفق', icon: '🍦', minLevel: 1 },
+  donut_base: { name: 'عجينة دونات', icon: '🍩', minLevel: 1 },
+  pink_glaze: { name: 'تغطية وردية', icon: '🌸', minLevel: 1 },
+  sprinkles: { name: 'سبرنكلز ملون', icon: '✨', minLevel: 1 },
+
+  coffee: { name: 'قهوة', icon: '☕', minLevel: 2 },
+  caramel: { name: 'صوص كراميل', icon: '🍯', minLevel: 2 },
+  cake_base: { name: 'طبقات كيك', icon: '🍰', minLevel: 2 },
+
+  tea: { name: 'شاي مثلج', icon: '🫖', minLevel: 3 },
+  peach: { name: 'خوخ', icon: '🍑', minLevel: 3 },
+  pancake_base: { name: 'خليط بانكيك', icon: '🥞', minLevel: 3 },
+  butter: { name: 'مكعب زبدة', icon: '🧈', minLevel: 3 },
+  honey: { name: 'عسل صافي', icon: '🍯', minLevel: 3 },
+  baked: { name: 'مخبوز بالفرن', icon: '🔥', minLevel: 1 }
 };
 
 // ==========================================
@@ -281,8 +290,6 @@ const state = {
   peer: null,
   roomCode: '',
   isHost: false,
-  connections: [],
-  hostConn: null,
 
   player: {
     name: 'باريستا بوكي',
@@ -290,8 +297,9 @@ const state = {
   },
   players: [],
 
+  level: 1,
+  levelTargetScore: 200,
   shiftActive: false,
-  shiftTimeRemaining: 90,
   shiftInterval: null,
   orderInterval: null,
 
@@ -303,13 +311,8 @@ const state = {
   orders: [],
   sharedItems: [],
 
-  currentDrink: {
-    ingredients: []
-  },
-  currentBakery: {
-    ingredients: []
-  },
-  isOvenBaking: false,
+  currentDrink: { ingredients: [] },
+  currentBakery: { ingredients: [] },
 
   selectedStation: 'drinks'
 };
@@ -458,7 +461,6 @@ class CuteNetwork {
         this.mqttClient.on('connect', () => {
           this.isMqttConnected = true;
           this.mqttClient.subscribe(`pookie/cafe/${this.roomCode}/#`);
-          console.log('Connected to Cafe Online MQTT Network!');
         });
 
         this.mqttClient.on('message', (topic, payload) => {
@@ -467,13 +469,7 @@ class CuteNetwork {
             this.receivePacket(data);
           } catch(e) {}
         });
-
-        this.mqttClient.on('error', (err) => {
-          console.warn('MQTT connection warning:', err);
-        });
-      } catch (e) {
-        console.warn('MQTT init error:', e);
-      }
+      } catch (e) {}
     }
   }
 
@@ -504,9 +500,7 @@ class CuteNetwork {
     this.seenMsgIds.add(packet.msgId);
 
     if (this.channel) {
-      try {
-        this.channel.postMessage(packet);
-      } catch(e) {}
+      try { this.channel.postMessage(packet); } catch(e) {}
     }
 
     if (this.mqttClient && this.isMqttConnected) {
@@ -547,7 +541,7 @@ function handleCreateRoom() {
   document.getElementById('createRoomBtn').style.display = 'none';
 
   renderPlayersChips();
-  showToast('تم فتح الكافيه بنجاح! شاركي الكود مع صديقاتك 🎀');
+  showToast('تم فتح الغرفة بنجاح! شاركي الكود مع صديقاتك 🎀');
 }
 
 function handleJoinRoom() {
@@ -555,11 +549,6 @@ function handleJoinRoom() {
   const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
   if (!code) {
     showToast('الرجاء إدخال كود الغرفة أولاً 🌸');
-    return;
-  }
-
-  if (state.isHost && state.roomCode === code) {
-    showToast('أنتِ المضيفة لهذه الغرفة حالياً 👑!');
     return;
   }
 
@@ -614,7 +603,7 @@ function broadcastState() {
     sharedItems: state.sharedItems,
     score: state.score,
     coins: state.coins,
-    timeRemaining: state.shiftTimeRemaining,
+    level: state.level,
     shiftActive: state.shiftActive
   });
 }
@@ -637,20 +626,22 @@ function handleIncomingData(data) {
     state.sharedItems = data.sharedItems || [];
     state.score = data.score || 0;
     state.coins = data.coins || 0;
-    state.shiftTimeRemaining = data.timeRemaining;
+    
+    if (data.level && data.level !== state.level) {
+      state.level = data.level;
+      showToast(`🎉 انتقل الجميع إلى اللفل ${state.level}!`, '🌟');
+      audio.playFanfare();
+    }
 
     if (data.shiftActive && !state.shiftActive) {
       launchGameView();
-    } else if (!data.shiftActive && state.shiftActive) {
-      triggerEndShiftUI();
     }
 
     renderOrders();
     renderSharedItems();
     updateStatsDisplay();
     renderPlayersChips();
-  } else if (data.type === 'END_SHIFT_EVENT') {
-    triggerEndShiftUI();
+    renderStationView();
   } else if (data.type === 'SHOUT') {
     audio.playAlert();
     showToast(data.message, data.avatar || '💬');
@@ -682,7 +673,7 @@ function copyDirectLink() {
   audio.playPop();
   const directUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
   navigator.clipboard.writeText(directUrl).then(() => {
-    showToast('تم نسخ الرابط المباشر للواتساب! 📋✨');
+    showToast('تم نسخ الرابط المباشر! 📋✨');
   }).catch(() => {
     prompt('انسخي هذا الرابط لصديقاتك:', directUrl);
   });
@@ -699,48 +690,52 @@ function renderPlayersChips() {
 }
 
 // ==========================================
-// 7. دورة اللعبة والشفت (Game Loop & Shift)
+// 7. اللعبة ونظام اللفلات المستمرة (Infinite Leveling)
 // ==========================================
-function resetWorkbenches() {
-  state.currentDrink = { ingredients: [] };
-  state.currentBakery = { ingredients: [] };
-  state.isOvenBaking = false;
-}
-
 function startShift() {
   audio.playDing();
   state.shiftActive = true;
-  state.shiftTimeRemaining = 90;
+  state.level = 1;
+  state.levelTargetScore = 200;
   state.score = 0;
   state.coins = 0;
   state.servedCount = 0;
   state.missedCount = 0;
   state.orders = [];
   state.sharedItems = [];
-  resetWorkbenches();
+  state.currentDrink = { ingredients: [] };
+  state.currentBakery = { ingredients: [] };
 
   launchGameView();
 
   if (state.isHost) {
     spawnCustomerOrder();
-    setTimeout(spawnCustomerOrder, 3000);
+    setTimeout(spawnCustomerOrder, 2500);
 
+    const spawnSpeed = Math.max(5000, 11000 - (state.level * 1500));
     state.orderInterval = setInterval(() => {
-      if (state.orders.length < 4) {
+      if (state.orders.length < 5) {
         spawnCustomerOrder();
       }
-    }, 12000);
+    }, spawnSpeed);
 
     state.shiftInterval = setInterval(() => {
-      state.shiftTimeRemaining--;
       updateCustomerPatience();
+      checkLevelUpProgress();
       updateStatsDisplay();
       broadcastState();
-
-      if (state.shiftTimeRemaining <= 0) {
-        endShift();
-      }
     }, 1000);
+  }
+}
+
+function checkLevelUpProgress() {
+  if (state.score >= state.levelTargetScore) {
+    state.level++;
+    state.levelTargetScore += 250 + (state.level * 100);
+    audio.playFanfare();
+    showToast(`👑 مبرووك! ارتفع المستوى إلى اللفل ${state.level}! انفتحت وصفات جديدة!`, '🎉');
+    renderStationView();
+    broadcastState();
   }
 }
 
@@ -753,39 +748,13 @@ function launchGameView() {
   updateStatsDisplay();
 }
 
-function endShift() {
-  state.shiftActive = false;
-  if (state.shiftInterval) clearInterval(state.shiftInterval);
-  if (state.orderInterval) clearInterval(state.orderInterval);
-
-  if (state.isHost) {
-    net.send({ type: 'END_SHIFT_EVENT' });
-  }
-
-  triggerEndShiftUI();
-  broadcastState();
-}
-
-function triggerEndShiftUI() {
-  state.shiftActive = false;
-  audio.playFanfare();
-  showScreen('results');
-  statsBar.style.display = 'none';
-
-  let stars = '⭐';
-  if (state.servedCount >= 8) stars = '⭐⭐⭐';
-  else if (state.servedCount >= 4) stars = '⭐⭐';
-
-  document.getElementById('resultStars').textContent = stars;
-  document.getElementById('resultScore').textContent = state.score;
-  document.getElementById('resultCoins').textContent = `${state.coins} 🪙`;
-  document.getElementById('resultServed').textContent = state.servedCount;
-  document.getElementById('resultMissed').textContent = state.missedCount;
-}
-
 function spawnCustomerOrder() {
+  const availableRecipes = RECIPES.filter(r => r.minLevel <= state.level);
+  const recipe = availableRecipes[Math.floor(Math.random() * availableRecipes.length)];
   const cust = CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
-  const recipe = RECIPES[Math.floor(Math.random() * RECIPES.length)];
+  
+  const basePatience = Math.max(45, 90 - (state.level * 8));
+
   const newOrder = {
     id: 'ord_' + Date.now() + '_' + Math.floor(Math.random()*100),
     customerName: cust.name,
@@ -795,8 +764,8 @@ function spawnCustomerOrder() {
     recipeIcon: recipe.icon,
     recipeTags: recipe.tags,
     required: recipe.required,
-    maxPatience: 80, // زيادة صبر الزبون إلى 80 ثانية لعدم الغضب بسرعة
-    patience: 80
+    maxPatience: basePatience,
+    patience: basePatience
   };
   state.orders.push(newOrder);
   audio.playDing();
@@ -811,8 +780,8 @@ function updateCustomerPatience() {
     if (state.orders[i].patience <= 0) {
       const missed = state.orders.splice(i, 1)[0];
       state.missedCount++;
-      state.score = Math.max(0, state.score - 15);
-      showToast(`${missed.customerName} زعل وغادر الكافيه! 💔`, '😭');
+      state.score = Math.max(0, state.score - 20);
+      showToast(`${missed.customerName} زعل وغادر! 💔`, '😭');
       audio.playAlert();
     }
   }
@@ -820,12 +789,13 @@ function updateCustomerPatience() {
 }
 
 function updateStatsDisplay() {
-  document.getElementById('statScore').textContent = state.score;
+  document.getElementById('statScore').textContent = `${state.score} / ${state.levelTargetScore}`;
   document.getElementById('statCoins').textContent = `${state.coins} 🪙`;
   
-  const min = Math.floor(state.shiftTimeRemaining / 60);
-  const sec = state.shiftTimeRemaining % 60;
-  document.getElementById('statTimer').textContent = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  const timerElem = document.getElementById('statTimer');
+  if (timerElem) {
+    timerElem.innerHTML = `اللفل <strong style="color:var(--pink-main); font-size:16px;">${state.level}</strong> ⭐`;
+  }
 }
 
 // ==========================================
@@ -834,7 +804,7 @@ function updateStatsDisplay() {
 function renderOrders() {
   ordersRack.innerHTML = '';
   if (state.orders.length === 0) {
-    ordersRack.innerHTML = '<div style="font-size:13px; color:var(--text-muted); padding:10px;">لا يوجد زبائن حالياً.. استراحة باريستا لطيفة 🌸</div>';
+    ordersRack.innerHTML = '<div style="font-size:13px; color:var(--text-muted); padding:10px;">لا يوجد زبائن حالياً.. استراحة باريستا 🌸</div>';
     return;
   }
 
@@ -871,7 +841,7 @@ function renderOrders() {
 function renderSharedItems() {
   sharedItemsContainer.innerHTML = '';
   if (state.sharedItems.length === 0) {
-    sharedItemsContainer.innerHTML = '<span class="shared-empty-hint">طاولة التجهيز فارغة. اصنعي مشروباً أو كيكاً وضعيها هنا ليراها الجميع! 🍰</span>';
+    sharedItemsContainer.innerHTML = '<span class="shared-empty-hint">طاولة التجهيز فارغة. جهزي صنفاً وضعيها هنا! 🍰</span>';
     return;
   }
 
@@ -883,7 +853,7 @@ function renderSharedItems() {
       <div style="font-size:12.5px; font-weight:800; color:#7a4f00; display:flex; align-items:center; gap:4px; white-space:nowrap;">
         <span>${item.icon}</span> <span>${item.name}</span> <span style="font-size:10px; color:#a87400;">(${item.makerName})</span>
       </div>
-      <button class="quick-serve-btn" style="background:var(--pink-main); color:#fff; border:none; border-radius:12px; padding:3px 10px; font-size:11px; font-weight:800; cursor:pointer; width:100%; box-shadow:0 2px 6px rgba(255,117,151,0.3);">
+      <button class="quick-serve-btn" style="background:var(--pink-main); color:#fff; border:none; border-radius:12px; padding:4px 12px; font-size:11px; font-weight:800; cursor:pointer; width:100%; box-shadow:0 2px 6px rgba(255,117,151,0.3); transition:all 0.2s;">
         🛎️ تقديم للزبون
       </button>
     `;
@@ -921,8 +891,8 @@ function handleServeOrder(orderId, itemId, senderName) {
     const order = state.orders.splice(orderIdx, 1)[0];
     state.sharedItems.splice(itemIdx, 1);
 
-    state.score += 50 + Math.floor(order.patience);
-    state.coins += 15;
+    state.score += 60 + Math.floor(order.patience);
+    state.coins += 20;
     state.servedCount++;
 
     audio.playCash();
@@ -930,13 +900,14 @@ function handleServeOrder(orderId, itemId, senderName) {
 
     renderOrders();
     renderSharedItems();
+    checkLevelUpProgress();
     updateStatsDisplay();
     broadcastState();
   }
 }
 
 // ==========================================
-// 9. محطات العمل والتجهيز (Workbench & Stations)
+// 9. محطات العمل والزر الصريح للفرن
 // ==========================================
 function renderStationView() {
   ingredientsGrid.innerHTML = '';
@@ -951,7 +922,7 @@ function renderStationView() {
 }
 
 function renderDrinksStation() {
-  stationHint.textContent = 'اختاري الكوب، ثم اسكبي السائل والثلج، وأضيفي البوبا والكريمة!';
+  stationHint.textContent = `مستواك الحالي: اللفل ${state.level} 🌟 (المكونات المقفولة تفتح مع ارتفاع اللفل)`;
 
   updateDrinkVisual();
 
@@ -960,21 +931,34 @@ function renderDrinksStation() {
     { key: 'ice', name: 'ثلج', icon: '🧊', sound: 'pop' },
     { key: 'matcha', name: 'ماتشا خضراء', icon: '🍵', sound: 'pour' },
     { key: 'strawberry', name: 'فراولة', icon: '🍓', sound: 'pour' },
-    { key: 'coffee', name: 'إسبريسو', icon: '☕', sound: 'pour' },
-    { key: 'tea', name: 'شاي مثلج', icon: '🫖', sound: 'pour' },
-    { key: 'peach', name: 'نكهة خوخ', icon: '🍑', sound: 'pour' },
     { key: 'milk', name: 'حليب', icon: '🥛', sound: 'pour' },
     { key: 'boba', name: 'كرات البوبا', icon: '⚫', sound: 'pop' },
     { key: 'cream', name: 'كريمة خفق', icon: '🍦', sound: 'pour' },
-    { key: 'caramel', name: 'كراميل', icon: '🍯', sound: 'pour' }
+    { key: 'coffee', name: 'إسبريسو', icon: '☕', sound: 'pour' },
+    { key: 'caramel', name: 'كراميل', icon: '🍯', sound: 'pour' },
+    { key: 'tea', name: 'شاي مثلج', icon: '🫖', sound: 'pour' },
+    { key: 'peach', name: 'نكهة خوخ', icon: '🍑', sound: 'pour' }
   ];
 
   drinkIngredients.forEach(ing => {
+    const meta = INGREDIENT_NAMES[ing.key] || {};
+    const minLvl = meta.minLevel || 1;
+    const isLocked = state.level < minLvl;
+
     const card = document.createElement('div');
-    card.className = 'ingredient-card';
-    card.innerHTML = `<span class="ing-icon">${ing.icon}</span><span class="ing-name">${ing.name}</span>`;
+    card.className = `ingredient-card ${isLocked ? 'locked' : ''}`;
+    card.innerHTML = `
+      <span class="ing-icon">${ing.icon}</span>
+      <span class="ing-name">${ing.name}</span>
+      ${isLocked ? `<span class="lock-badge">🔒 لفل ${minLvl}</span>` : ''}
+    `;
 
     card.addEventListener('click', () => {
+      if (isLocked) {
+        showToast(`هذا المكون ينفتح في اللفل ${minLvl}! واصلي تجميع النقاط! ⭐`);
+        audio.playAlert();
+        return;
+      }
       addDrinkIngredient(ing.key, ing.sound);
     });
 
@@ -987,7 +971,7 @@ function addDrinkIngredient(key, soundType) {
   else audio.playPop();
 
   if (key === 'cup' && state.currentDrink.ingredients.includes('cup')) {
-    showToast('الكوب موجود بالفعل على الطاولة!');
+    showToast('الكوب موجود بالفعل!');
     return;
   }
   if (key !== 'cup' && !state.currentDrink.ingredients.includes('cup')) {
@@ -1029,8 +1013,8 @@ function updateDrinkVisual() {
     <span class="item-cup-preview">${previewIcon}</span>
     <div class="item-ingredients-tags">${badges}</div>
     <div style="display:flex; gap:8px; margin-top:10px;">
-      <button class="btn-primary" id="placeDrinkBtn" style="font-size:12px; padding:6px 12px;">✨ وضع على طاولة التجهيز</button>
-      <button class="btn-solo" id="clearDrinkBtn" style="font-size:12px; padding:6px 12px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
+      <button class="btn-primary" id="placeDrinkBtn" style="font-size:12px; padding:7px 14px;">✨ وضع على طاولة التجهيز</button>
+      <button class="btn-solo" id="clearDrinkBtn" style="font-size:12px; padding:7px 14px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
     </div>
   `;
 
@@ -1047,7 +1031,7 @@ function finishDrink() {
   const matchedRecipe = RECIPES.find(r => r.type === 'drink' && r.required.every(req => ing.includes(req)));
 
   if (!matchedRecipe) {
-    showToast('هذه الخلطة لا تطابق أي مشروب في القائمة! تأكدي من المكونات 🍵');
+    showToast('هذه الخلطة لا تطابق أي مشروب في القائمة! 🍵');
     audio.playAlert();
     return;
   }
@@ -1062,7 +1046,7 @@ function finishDrink() {
 
   state.sharedItems.push(newItem);
   audio.playDing();
-  showToast(`تم تجهيز ${matchedRecipe.name} ووضعها على الطاولة! ✨`);
+  showToast(`تم تجهيز ${matchedRecipe.name}! ✨`);
 
   net.send({
     type: 'ADD_SHARED_ITEM',
@@ -1077,34 +1061,42 @@ function finishDrink() {
 }
 
 function renderBakeryStation() {
-  stationHint.textContent = 'اختاري العجينة، ثم اخبزيها في الفرن، وأضيفي الطبقات والتزيين!';
+  stationHint.textContent = 'جهزي العجينة ثم اضغطي زر (خبز بالفرن 🔥) بجانب زر التقديم!';
 
   updateBakeryVisual();
 
   const bakeryIngredients = [
     { key: 'donut_base', name: 'عجينة دونات', icon: '🍩' },
-    { key: 'cake_base', name: 'طبقات كيك', icon: '🍰' },
-    { key: 'pancake_base', name: 'خليط بانكيك', icon: '🥞' },
-    { key: 'bake_action', name: 'خبز بالفرن 🔥', icon: '🔥', action: true },
     { key: 'pink_glaze', name: 'تغطية وردية', icon: '🌸' },
     { key: 'sprinkles', name: 'سبرنكلز', icon: '✨' },
+    { key: 'cake_base', name: 'طبقات كيك', icon: '🍰' },
     { key: 'cream', name: 'كريمة خفق', icon: '🍦' },
     { key: 'strawberry', name: 'فراولة', icon: '🍓' },
+    { key: 'pancake_base', name: 'خليط بانكيك', icon: '🥞' },
     { key: 'butter', name: 'مكعب زبدة', icon: '🧈' },
     { key: 'honey', name: 'عسل صافي', icon: '🍯' }
   ];
 
   bakeryIngredients.forEach(ing => {
+    const meta = INGREDIENT_NAMES[ing.key] || {};
+    const minLvl = meta.minLevel || 1;
+    const isLocked = state.level < minLvl;
+
     const card = document.createElement('div');
-    card.className = 'ingredient-card';
-    card.innerHTML = `<span class="ing-icon">${ing.icon}</span><span class="ing-name">${ing.name}</span>`;
+    card.className = `ingredient-card ${isLocked ? 'locked' : ''}`;
+    card.innerHTML = `
+      <span class="ing-icon">${ing.icon}</span>
+      <span class="ing-name">${ing.name}</span>
+      ${isLocked ? `<span class="lock-badge">🔒 لفل ${minLvl}</span>` : ''}
+    `;
 
     card.addEventListener('click', () => {
-      if (ing.action) {
-        bakeInOven();
-      } else {
-        addBakeryIngredient(ing.key);
+      if (isLocked) {
+        showToast(`هذا الصنف يفتح باللفل ${minLvl}! ⭐`);
+        audio.playAlert();
+        return;
       }
+      addBakeryIngredient(ing.key);
     });
 
     ingredientsGrid.appendChild(card);
@@ -1113,7 +1105,6 @@ function renderBakeryStation() {
 
 function addBakeryIngredient(key) {
   audio.playPop();
-
   const bases = ['donut_base', 'cake_base', 'pancake_base'];
   const ing = state.currentBakery.ingredients;
 
@@ -1124,7 +1115,7 @@ function addBakeryIngredient(key) {
     }
   } else {
     if (!ing.some(b => bases.includes(b))) {
-      showToast('اختاري قاعدة الكيك أو الدونات أو البانكيك أولاً! 🧁');
+      showToast('اختاري قاعدة الكيك أو الدونات أولاً! 🧁');
       return;
     }
   }
@@ -1133,30 +1124,6 @@ function addBakeryIngredient(key) {
     ing.push(key);
     updateBakeryVisual();
   }
-}
-
-function bakeInOven() {
-  const ing = state.currentBakery.ingredients;
-  if (ing.length === 0) {
-    showToast('الصينية فارغة! ضعي عجينة أولاً للخبز 🔥');
-    return;
-  }
-  if (ing.includes('baked')) {
-    showToast('تم خبز هذا الصنف بالفعل! 🔥');
-    return;
-  }
-
-  audio.playPour();
-  showToast('جاري الخبز بالفرن... 🧁🔥');
-  state.isOvenBaking = true;
-
-  setTimeout(() => {
-    state.isOvenBaking = false;
-    ing.push('baked');
-    audio.playDing();
-    showToast('تم الخبز بنجاح! تفكحي الصينية الآن! ✨');
-    updateBakeryVisual();
-  }, 1500);
 }
 
 function updateBakeryVisual() {
@@ -1181,14 +1148,29 @@ function updateBakeryVisual() {
     return `<span class="ingredient-badge">${info.icon} ${info.name}</span>`;
   }).join('');
 
+  const isBaked = current.includes('baked');
+
   visualContainer.innerHTML = `
     <span class="item-cup-preview">${previewIcon}</span>
     <div class="item-ingredients-tags">${badges}</div>
-    <div style="display:flex; gap:8px; margin-top:10px;">
-      <button class="btn-primary" id="placeBakeryBtn" style="font-size:12px; padding:6px 12px;">✨ وضع على طاولة التجهيز</button>
-      <button class="btn-solo" id="clearBakeryBtn" style="font-size:12px; padding:6px 12px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
+    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center;">
+      <button class="btn-primary" id="bakeOvenBtn" style="font-size:12px; padding:7px 14px; background:linear-gradient(135deg, #ff9f43, #ee5253); display:${isBaked ? 'none' : 'inline-flex'};">🔥 خبز بالفرن</button>
+      <button class="btn-primary" id="placeBakeryBtn" style="font-size:12px; padding:7px 14px;">✨ وضع على طاولة التجهيز</button>
+      <button class="btn-solo" id="clearBakeryBtn" style="font-size:12px; padding:7px 14px; background:#ffeaa7; color:#d63031;">🗑️ تفريغ</button>
     </div>
   `;
+
+  const bakeBtn = document.getElementById('bakeOvenBtn');
+  if (bakeBtn) {
+    bakeBtn.addEventListener('click', () => {
+      if (!current.includes('baked')) {
+        current.push('baked');
+        audio.playPour();
+        showToast('تم الخبز بالفرن بنجاح! 🔥✨');
+        updateBakeryVisual();
+      }
+    });
+  }
 
   document.getElementById('placeBakeryBtn').addEventListener('click', finishBakery);
   document.getElementById('clearBakeryBtn').addEventListener('click', () => {
@@ -1218,7 +1200,7 @@ function finishBakery() {
 
   state.sharedItems.push(newItem);
   audio.playDing();
-  showToast(`تم التجهيز: ${matchedRecipe.name} جاهزة للتقديم! ✨`);
+  showToast(`تم التجهيز: ${matchedRecipe.name} جاهزة! ✨`);
 
   net.send({
     type: 'ADD_SHARED_ITEM',
@@ -1233,12 +1215,12 @@ function finishBakery() {
 }
 
 function renderServingStation() {
-  stationHint.textContent = 'تفحصي الطلبات الحالية وطاولة التجهيز، وقدمي الطلبات الجاهزة للزبائن!';
+  stationHint.textContent = 'تفحصي الطلبات وطاولة التجهيز، وقدميها للزبائن!';
 
   currentItemVisual.innerHTML = `
     <span style="font-size:32px;">🛎️</span>
-    <span style="font-size:13px; color:var(--text-dark); font-weight:700;">محطة الفحص والتسليم السريع</span>
-    <span style="font-size:11.5px; color:var(--text-muted);">اضغطي زر (🛎️ تقديم للزبون) تحت الصنف الجاهز للتسليم الفوري!</span>
+    <span style="font-size:13px; color:var(--text-dark); font-weight:700;">محطة التقديم التسليم الفوري</span>
+    <span style="font-size:11.5px; color:var(--text-muted);">اضغطي زر (🛎️ تقديم للزبون) تحت الصنف المنشور!</span>
   `;
 
   ingredientsGrid.innerHTML = '';
@@ -1260,7 +1242,7 @@ function renderServingStation() {
 }
 
 // ==========================================
-// 10. التشغيل عند التحميل (Window Load)
+// 10. التشغيل عند التحميل
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
   initApp();

@@ -10,9 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="cafe.css" />
-  <!-- محرك الشبكة: ملف محلي + رابط CDN احتياطي لدعم GitHub Pages -->
-  <script src="mqtt.min.js"></script>
-  <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js"></script>
+  <!-- محرك الشبكة (MQTT) للعب الجماعي عبر الإنترنت -->
+  <script src="https://unpkg.com/mqtt@5.3.5/dist/mqtt.min.js" defer></script>
 </head>
 <body>
 
@@ -53,15 +52,23 @@
         <span class="stat-badge gold" id="statCoins">0 🪙</span>
       </div>
       <div class="stat-item">
-        <span>وقت الشفت:</span>
-        <span class="stat-badge sky" id="statTimer">1:30</span>
+        <span>اللفل:</span>
+        <span class="stat-badge sky" id="statLevel">1 ⭐</span>
+      </div>
+      <div class="stat-item">
+        <span>الوقت:</span>
+        <span class="stat-badge timer" id="statTimer">3:00</span>
+      </div>
+      <div class="stat-item">
+        <span>كومبو:</span>
+        <span class="stat-badge combo" id="statCombo">—</span>
       </div>
     </div>
 
     <!-- 1. شاشة اللوبي (Lobby Screen) -->
     <main class="screen-panel active" id="lobbyScreen">
       <div class="lobby-card">
-        <div class="lobby-hero-art">🍰🧋</div>
+        <div class="lobby-hero-art" id="lobbyHeroArt" aria-hidden="true"></div>
         <h2 class="lobby-title">أهلاً بكِ في كافيه البنات المشترك!</h2>
         <p class="lobby-desc">
           حضّري الماتشا والبوبا والحلويات الكيوت مع صديقاتك في نفس الوقت من جوالاتكم، ونسقوا الطلبات قبل يزعلون الزبائن! 🌸✨
@@ -74,12 +81,7 @@
 
           <label class="setup-label" style="margin-top: 14px;">اختاري شخصيتك الكيوت:</label>
           <div class="avatars-row">
-            <div class="avatar-choice selected" data-avatar="🐱">🐱</div>
-            <div class="avatar-choice" data-avatar="🐰">🐰</div>
-            <div class="avatar-choice" data-avatar="🐻">🐻</div>
-            <div class="avatar-choice" data-avatar="🐶">🐶</div>
-            <div class="avatar-choice" data-avatar="🦊">🦊</div>
-            <div class="avatar-choice" data-avatar="🎀">🎀</div>
+            <!-- الحيوانات المتحركة تُرسم هنا من cafe.js -->
           </div>
         </div>
 
@@ -137,7 +139,7 @@
       <!-- طاولة التجهيز المشتركة بين الجميع -->
       <div class="shared-counter-box">
         <div class="shared-counter-title">
-          <span>🛎️ طاولة التجهيز المشتركة (انقري على أي صنف لتقديمه للزبون):</span>
+          <span>🛎️ طاولة التجهيز المشتركة (قدّمي الصنف أو اضغطي "تسليم" على تذكرة الزبون):</span>
         </div>
         <div class="shared-items-slots" id="sharedItemsContainer">
           <span class="shared-empty-hint">طاولة التجهيز فارغة حالياً.. اطبخوا مشروباً أو حلى وضعه هنا! 🍰</span>
@@ -155,6 +157,9 @@
         <button class="station-tab-btn" data-station="serving">
           <span>🛎️ فحص وتسليم الزبائن</span>
         </button>
+        <button class="station-tab-btn" data-station="shop">
+          <span>🛍️ متجر الأجهزة</span>
+        </button>
       </div>
 
       <!-- لوحة تجهيز المحطة النشطة -->
@@ -164,7 +169,7 @@
             <span>✨ طاولة التحضير</span>
           </div>
           <div class="station-step-hint" id="stationHint">
-            اختاري الكوب ثم اسكبي السائل والثلج وأضيفي البوبا!
+            اختاري الكوب ثم أضيفي المكونات وشغّلي الآلات!
           </div>
         </div>
 
@@ -198,6 +203,7 @@
       <div class="results-card">
         <div class="stars-celebration star-anim" id="resultStars">⭐⭐⭐</div>
         <h2 style="font-size: 24px; font-weight: 900; color: var(--pink-main); margin-bottom: 6px;">انتهى شفت اليوم بنجاح!</h2>
+        <p style="font-size: 13px; font-weight: 800; color: var(--text-dark); margin-bottom: 4px;">وصلتوا للفل <span id="resultLevel">1</span> 🌟</p>
         <p style="font-size: 14px; color: var(--text-muted);">أبدعتوا في إدارة الكافيه وسرعة الخدمة يا بطلات 🌸</p>
 
         <div class="results-stats-grid">
@@ -216,6 +222,14 @@
           <div class="results-box">
             <div class="results-box-val" id="resultMissed">0</div>
             <div class="results-box-lbl">الزبائن المغادرين 💔</div>
+          </div>
+          <div class="results-box">
+            <div class="results-box-val" id="resultCombo">x0</div>
+            <div class="results-box-lbl">أعلى كومبو 🔥</div>
+          </div>
+          <div class="results-box">
+            <div class="results-box-val" id="resultVip">0</div>
+            <div class="results-box-lbl">زبائن VIP 👑</div>
           </div>
         </div>
 
